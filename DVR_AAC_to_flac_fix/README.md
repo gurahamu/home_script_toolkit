@@ -9,5 +9,7 @@ It sounds limited, but it's really just for dealing with my pile of action camer
 
 #### Requirements:
 bash :)
+
 ffmpeg - all powerful audio visual toolkit
+
 parallel - I added this to spin up more instances of ffmpeg.
