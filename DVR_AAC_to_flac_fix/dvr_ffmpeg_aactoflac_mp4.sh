@@ -1,7 +1,8 @@
 #!/bin/bash
 
-folder="./"  # Current directory
-num_jobs=4   # Number of parallel jobs (adjust based on CPU cores)
+INPUT_DIR="~/"   # Source directory
+OUTPUT_DIR="~/"  # Destination directory
+num_jobs=8        # Number of parallel jobs (adjust based on CPU cores)
 
 process_file() {
     file="$1"
@@ -12,9 +13,11 @@ process_file() {
         return
     fi
 
-    # Extract the base name
-    filename="${file%.*}"
-    output="${filename}-flac.mp4"
+    # Build output path preserving relative structure
+    rel="${file#$INPUT_DIR/}"
+    output="$OUTPUT_DIR/${rel%.*}-flac.mp4"
+
+    mkdir -p "$(dirname "$output")"
 
     # Skip if output already exists
     if [[ -e "$output" ]]; then
@@ -31,7 +34,7 @@ process_file() {
     fi
 
     # Convert audio to FLAC and copy video, ensuring no stdin interaction
-    ffmpeg -nostdin -v verbose -i "$file" -acodec flac -vcodec copy "$output" &> "$(dirname "$file")/ffmpeg_log.txt"
+    ffmpeg -nostdin -v verbose -i "$file" -acodec flac -vcodec copy "$output" &> "$(dirname "$output")/ffmpeg_log.txt"
 
     # Check if ffmpeg succeeded
     if [[ $? -eq 0 ]]; then
@@ -41,8 +44,9 @@ process_file() {
     fi
 }
 
-export -f process_file  # Correct way to export the function
+export -f process_file
+export INPUT_DIR OUTPUT_DIR
 
 # Find files and process them in parallel
-find "$folder" -type f \( -iname "*.mp4" -o -iname "*.MP4" \) -print0 | parallel -0 -j "$num_jobs" process_file {}
+find "$INPUT_DIR" -type f \( -iname "*.mp4" -o -iname "*.MP4" \) -print0 | parallel -0 -j "$num_jobs" process_file {}
 
